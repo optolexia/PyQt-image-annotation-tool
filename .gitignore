@@ -10,3 +10,5 @@ paper/
 *.aux
 *.gz
 *.toc
+
+.python-version
