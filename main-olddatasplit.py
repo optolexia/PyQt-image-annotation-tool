@@ -34,14 +34,13 @@ def get_img_df():
     :return: list of all filenames
     """
     img_df = pd.read_parquet(
-        "/Users/robindegroot/Downloads/Gaze_match_check_parquet_20220210",
+        "/Users/robindegroot/Downloads/Gaze_match_check_parquet",
         columns=[
             "content",
             "SessionID",
             "StimuliName",
             "frameMilliseconds",
-            "GazeCoordinatesLeftEye",
-            "GazeCoordinatesRightEye",
+            "TransformedGazeCoordinates",
             "frameTimestamp",
         ],
     ).sort_values(["SessionID", "StimuliName", "frameMilliseconds"])
@@ -372,10 +371,10 @@ class LabelerWindow(QWidget):
         self.curr_image_headline.setObjectName("headline")
 
         # image name label
-        self.img_name_label.setGeometry(20, 40, self.img_panel_width, 20)
+        self.img_name_label.setGeometry(50, 40, self.img_panel_width, 50)
 
         # progress bar (how many images have I labeled so far)
-        self.progress_bar.setGeometry(20, 65, self.img_panel_width, 20)
+        self.progress_bar.setGeometry(51, 65, self.img_panel_width, 51)
 
         # csv note
         self.csv_note.setGeometry(self.img_panel_width + 20, 640, 400, 20)
@@ -394,14 +393,18 @@ class LabelerWindow(QWidget):
             str(
                 [
                     round(x, 2)
-                    for x in self.img_df.iloc[self.counter]["GazeCoordinatesLeftEye"]
+                    for x in self.img_df.iloc[self.counter][
+                        "TransformedGazeCoordinates"
+                    ]["GazeCoordinatesLeftEye"]
                 ]
             )
             + "\n"
             + str(
                 [
                     round(x, 2)
-                    for x in self.img_df.iloc[self.counter]["GazeCoordinatesRightEye"]
+                    for x in self.img_df.iloc[self.counter][
+                        "TransformedGazeCoordinates"
+                    ]["GazeCoordinatesRightEye"]
                 ]
             )
             + "\n"
@@ -564,8 +567,8 @@ class LabelerWindow(QWidget):
                     [
                         round(x, 2)
                         for x in self.img_df.iloc[self.counter][
-                            "GazeCoordinatesLeftEye"
-                        ]
+                            "TransformedGazeCoordinates"
+                        ]["GazeCoordinatesLeftEye"]
                     ]
                 )
                 + "\n"
@@ -573,8 +576,8 @@ class LabelerWindow(QWidget):
                     [
                         round(x, 2)
                         for x in self.img_df.iloc[self.counter][
-                            "GazeCoordinatesRightEye"
-                        ]
+                            "TransformedGazeCoordinates"
+                        ]["GazeCoordinatesRightEye"]
                     ]
                 )
                 + "\n"
@@ -605,8 +608,8 @@ class LabelerWindow(QWidget):
                         [
                             round(x, 2)
                             for x in self.img_df.iloc[self.counter][
-                                "GazeCoordinatesLeftEye"
-                            ]
+                                "TransformedGazeCoordinates"
+                            ]["GazeCoordinatesLeftEye"]
                         ]
                     )
                     + "\n"
@@ -614,8 +617,8 @@ class LabelerWindow(QWidget):
                         [
                             round(x, 2)
                             for x in self.img_df.iloc[self.counter][
-                                "GazeCoordinatesRightEye"
-                            ]
+                                "TransformedGazeCoordinates"
+                            ]["GazeCoordinatesRightEye"]
                         ]
                     )
                     + "\n"
