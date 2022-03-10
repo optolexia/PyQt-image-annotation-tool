@@ -21,6 +21,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QGroupBox,
     QFormLayout,
+    QSlider,
 )
 from xlsxwriter.workbook import Workbook
 import pandas as pd
@@ -34,18 +35,21 @@ def get_img_df():
     :return: list of all filenames
     """
     img_df = pd.read_parquet(
-        "/Users/robindegroot/Downloads/Gaze_match_check_parquet_20220210",
+        "/Users/robindegroot/Downloads/Gaze_match_check_parquet_20220218_8738448c-452f-4101-8334-cbbadd6da552",
         columns=[
             "content",
             "SessionID",
             "StimuliName",
-            "frameMilliseconds",
-            "GazeCoordinatesLeftEye",
-            "GazeCoordinatesRightEye",
+            "frameMillisecondsFromGaze",
+            "TransformedGazeCoordinates",
+            # "GazeCoordinatesLeftEye",
+            # "GazeCoordinatesRightEye",
             "frameTimestamp",
         ],
-    ).sort_values(["SessionID", "StimuliName", "frameMilliseconds"])
-    return img_df
+    ).sort_values(["SessionID", "StimuliName", "frameMillisecondsFromGaze"])
+    return img_df.drop_duplicates(
+        subset=["SessionID", "StimuliName", "frameMillisecondsFromGaze"]
+    )
 
 
 def make_folder(directory):
@@ -372,10 +376,10 @@ class LabelerWindow(QWidget):
         self.curr_image_headline.setObjectName("headline")
 
         # image name label
-        self.img_name_label.setGeometry(20, 40, self.img_panel_width, 20)
+        self.img_name_label.setGeometry(20, 40, self.img_panel_width, 50)
 
         # progress bar (how many images have I labeled so far)
-        self.progress_bar.setGeometry(20, 65, self.img_panel_width, 20)
+        self.progress_bar.setGeometry(20, 100, self.img_panel_width, 20)
 
         # csv note
         self.csv_note.setGeometry(self.img_panel_width + 20, 640, 400, 20)
@@ -386,7 +390,7 @@ class LabelerWindow(QWidget):
 
         # show image
         self.set_image(0)
-        self.image_box.setGeometry(20, 120, self.img_panel_width, self.img_panel_height)
+        self.image_box.setGeometry(20, 150, self.img_panel_width, self.img_panel_height)
         self.image_box.setAlignment(Qt.AlignTop)
 
         # image name
@@ -394,14 +398,18 @@ class LabelerWindow(QWidget):
             str(
                 [
                     round(x, 2)
-                    for x in self.img_df.iloc[self.counter]["GazeCoordinatesLeftEye"]
+                    for x in self.img_df.iloc[self.counter][
+                        "TransformedGazeCoordinates"
+                    ]["GazeCoordinatesLeftEye"]
                 ]
             )
             + "\n"
             + str(
                 [
                     round(x, 2)
-                    for x in self.img_df.iloc[self.counter]["GazeCoordinatesRightEye"]
+                    for x in self.img_df.iloc[self.counter][
+                        "TransformedGazeCoordinates"
+                    ]["GazeCoordinatesRightEye"]
                 ]
             )
             + "\n"
@@ -435,6 +443,16 @@ class LabelerWindow(QWidget):
         next_im_btn = QtWidgets.QPushButton("Next", self)
         next_im_btn.move(self.img_panel_width + 140, next_prev_top_margin)
         next_im_btn.clicked.connect(self.show_next_image)
+
+        # Add image selection slider
+        im_slider = QSlider(Qt.Horizontal, self)
+        im_slider.setRange(0, len(self.img_df))
+        im_slider.move(20, self.img_panel_height + 50)
+        im_slider.setFocusPolicy(Qt.NoFocus)
+        im_slider.setPageStep(1)
+        im_slider.setMinimumWidth(int(self.img_panel_width * 2))
+        im_slider.setMinimumHeight(100)
+        im_slider.valueChanged.connect(self.show_next_image)
 
         # Add "Prev Image" and "Next Image" keyboard shortcuts
         prev_im_kbs = QShortcut(QKeySequence("p"), self)
@@ -551,10 +569,13 @@ class LabelerWindow(QWidget):
         else:
             self.set_button_color(img_name)
 
-    def show_next_image(self):
+    def show_next_image(self, value=None):
         """
         loads and shows next image in dataset
         """
+        if value:
+            self.counter = value - 1
+
         if self.counter < self.num_images - 1:
             self.counter += 1
 
@@ -564,8 +585,8 @@ class LabelerWindow(QWidget):
                     [
                         round(x, 2)
                         for x in self.img_df.iloc[self.counter][
-                            "GazeCoordinatesLeftEye"
-                        ]
+                            "TransformedGazeCoordinates"
+                        ]["GazeCoordinatesLeftEye"]
                     ]
                 )
                 + "\n"
@@ -573,8 +594,8 @@ class LabelerWindow(QWidget):
                     [
                         round(x, 2)
                         for x in self.img_df.iloc[self.counter][
-                            "GazeCoordinatesRightEye"
-                        ]
+                            "TransformedGazeCoordinates"
+                        ]["GazeCoordinatesRightEye"]
                     ]
                 )
                 + "\n"
@@ -605,8 +626,8 @@ class LabelerWindow(QWidget):
                         [
                             round(x, 2)
                             for x in self.img_df.iloc[self.counter][
-                                "GazeCoordinatesLeftEye"
-                            ]
+                                "TransformedGazeCoordinates"
+                            ]["GazeCoordinatesLeftEye"]
                         ]
                     )
                     + "\n"
@@ -614,8 +635,8 @@ class LabelerWindow(QWidget):
                         [
                             round(x, 2)
                             for x in self.img_df.iloc[self.counter][
-                                "GazeCoordinatesRightEye"
-                            ]
+                                "TransformedGazeCoordinates"
+                            ]["GazeCoordinatesRightEye"]
                         ]
                     )
                     + "\n"
